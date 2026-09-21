@@ -30,6 +30,7 @@
 ```text
 cafe-sales-data-cleaning/
 ├── README.md                                          # Документація репозиторію
+├── vercel.json                                        # Конфігурація Vercel (маршрутизація звіту)
 ├── .gitignore                                         # Налаштування виключень
 ├── cafe_sales_data_cleaning.R                         # Автономний R-скрипт повного циклу
 ├── lab_data_cleaning_cafe_sales_self_guided_r.ipynb   # Інтерактивний Jupyter Notebook
