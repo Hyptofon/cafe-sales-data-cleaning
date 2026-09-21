@@ -2,6 +2,9 @@
 
 [![Language: R 4.6.1](https://img.shields.io/badge/R-4.6.1-blue.svg)](https://www.r-project.org/)
 [![Status: Completed](https://img.shields.io/badge/Status-Completed%20%26%20Verified-success.svg)](#key-results)
+[![Live Report: Vercel](https://img.shields.io/badge/Live%20Report-Vercel-black?logo=vercel)](https://cafe-sales-data-cleaning.vercel.app/)
+
+> 🌐 **Онлайн-звіт:** Детальний інтерактивний звіт розгорнуто та доступно за посиланням: **[https://cafe-sales-data-cleaning.vercel.app/](https://cafe-sales-data-cleaning.vercel.app/)**
 
 Лабораторна робота з комплексного аудиту якості, детермінованого очищення транзакційних даних кав'ярні та інженерії ознак для подальшого аналізу й моделювання. Проєкт реалізовано мовою **R** із забезпеченням суворої відтворюваності, валідації бізнес-правил та ізоляції від витоку даних (*data leakage*).
 
@@ -122,5 +125,6 @@ pandoc report/REPORT.md -o report/REPORT.html --standalone
 
 ## Reports
 
+- 🌐 **Онлайн-звіт на Vercel:** [https://cafe-sales-data-cleaning.vercel.app/](https://cafe-sales-data-cleaning.vercel.app/) (детальний інтерактивний веб-звіт)
 - **Повний аналітичний звіт (Markdown):** [report/REPORT.md](report/REPORT.md)
 - **Стилізована HTML-версія звіту:** [report/REPORT.html](report/REPORT.html)
