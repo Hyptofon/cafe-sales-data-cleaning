@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Звіт з лабораторної роботи: Cafe Sales Data Cleaning in R</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <style>
+  /* Academic High-Contrast Centered Wide Theme */
+  * {
+      box-sizing: border-box;
+  }
+  html {
+      background-color: #f3f4f6 !important;
+      font-size: 16px;
+  }
+  body {
+      max-width: 1200px !important;
+      margin: 40px auto !important;
+      padding: 50px 65px !important;
+      background: #ffffff !important;
+      color: #1f2937 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+      line-height: 1.65 !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 12px !important;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.07) !important;
+  }
+  @media (max-width: 1280px) {
+      body {
+          margin: 20px 15px !important;
+          padding: 30px 25px !important;
+          max-width: 100% !important;
+      }
+  }
+  h1, h2, h3, h4, h5, h6 {
+      color: #111827 !important;
+      font-weight: 700 !important;
+      line-height: 1.3 !important;
+  }
+  h1 {
+      font-size: 2.1rem !important;
+      border-bottom: 2px solid #2563eb !important;
+      padding-bottom: 14px !important;
+      margin-top: 0 !important;
+      margin-bottom: 24px !important;
+  }
+  h2 {
+      font-size: 1.5rem !important;
+      border-bottom: 1px solid #e5e7eb !important;
+      padding-bottom: 8px !important;
+      margin-top: 40px !important;
+      margin-bottom: 18px !important;
+  }
+  h3 {
+      font-size: 1.25rem !important;
+      margin-top: 26px !important;
+      margin-bottom: 12px !important;
+  }
+  h4 {
+      font-size: 1.1rem !important;
+      color: #374151 !important;
+      margin-top: 20px !important;
+      margin-bottom: 10px !important;
+  }
+  p, li {
+      color: #1f2937 !important;
+      font-size: 15.5px !important;
+  }
+  ul, ol {
+      padding-left: 24px !important;
+      margin: 12px 0 !important;
+  }
+  li {
+      margin-bottom: 6px !important;
+  }
+  /* Tables: fully visible, spacious, and centered */
+  table {
+      display: table !important;
+      width: 100% !important;
+      border-collapse: collapse !important;
+      margin: 24px 0 !important;
+      font-size: 14.5px !important;
+      border: 1px solid #d1d5db !important;
+  }
+  th, td {
+      padding: 10px 16px !important;
+      border: 1px solid #d1d5db !important;
+      text-align: left !important;
+      vertical-align: top !important;
+  }
+  th {
+      background-color: #f3f4f6 !important;
+      color: #111827 !important;
+      font-weight: 700 !important;
+      border-bottom: 2px solid #9ca3af !important;
+  }
+  td {
+      color: #1f2937 !important;
+      background-color: #ffffff !important;
+  }
+  tr:nth-child(even) td {
+      background-color: #f9fafb !important;
+  }
+  tbody {
+      border-top: none !important;
+      border-bottom: none !important;
+  }
+  /* Code & Inline Code */
+  pre {
+      background-color: #f6f8fa !important;
+      color: #1f2328 !important;
+      border: 1px solid #d0d7de !important;
+      border-radius: 8px !important;
+      padding: 18px 20px !important;
+      overflow-x: auto !important;
+      font-size: 13.5px !important;
+      line-height: 1.55 !important;
+      margin: 18px 0 !important;
+  }
+  code {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace !important;
+      font-size: 0.9em !important;
+  }
+  p code, li code, td code {
+      background-color: #f3f4f6 !important;
+      color: #b42318 !important;
+      font-weight: 600 !important;
+      padding: 2px 6px !important;
+      border-radius: 4px !important;
+      border: 1px solid #e5e7eb !important;
+  }
+  pre code {
+      background-color: transparent !important;
+      color: inherit !important;
+      padding: 0 !important;
+      border: none !important;
+      font-weight: normal !important;
+  }
+  /* Links, blockquotes & images */
+  a {
+      color: #1d4ed8 !important;
+      text-decoration: underline !important;
+      text-underline-offset: 2px !important;
+  }
+  a:hover {
+      color: #1e40af !important;
+  }
+  em, .caption {
+      color: #4b5563 !important;
+      font-size: 14px !important;
+      display: block !important;
+      margin-top: 4px !important;
+  }
+  blockquote {
+      border-left: 4px solid #2563eb !important;
+      background-color: #eff6ff !important;
+      color: #1e3a8a !important;
+      padding: 14px 20px !important;
+      margin: 20px 0 !important;
+      border-radius: 0 8px 8px 0 !important;
+  }
+  img {
+      max-width: 100% !important;
+      height: auto !important;
+      border: 1px solid #d1d5db !important;
+      border-radius: 8px !important;
+      margin: 18px 0 6px 0 !important;
+      display: block !important;
+      background-color: #ffffff !important;
+  }
+  hr {
+      border: 0 !important;
+      height: 1px !important;
+      background-color: #e5e7eb !important;
+      margin: 36px 0 !important;
+  }
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Звіт з лабораторної роботи: Cafe Sales Data Cleaning
+in R</h1>
+</header>
+<h1
+id="лабораторна-робота-очищення-та-підготовка-даних-cafe-sales-до-аналізу-та-машинного-навчання">Лабораторна
+робота — очищення та підготовка даних Cafe Sales до аналізу та машинного
+навчання</h1>
+<h2 id="титульна-інформація">Титульна інформація</h2>
+<ul>
+<li><strong>Дисципліна:</strong> Основи машинного навчання / Аналіз
+даних</li>
+<li><strong>Тема:</strong> Очищення та підготовка даних до моделювання
+(Data Cleaning &amp; Feature Engineering)</li>
+<li><strong>Мова програмування:</strong> R (версія 4.6.1 ucrt,
+64-bit)</li>
+<li><strong>Середовище розробки:</strong> Jupyter Notebook (IRkernel) та
+автономний Rscript</li>
+<li><strong>Основний виконуваний ноутбук:</strong> <a
+href="../lab_data_cleaning_cafe_sales_self_guided_r.ipynb"><code>lab_data_cleaning_cafe_sales_self_guided_r.ipynb</code></a></li>
+<li><strong>Автономний R-скрипт:</strong> <a
+href="../cafe_sales_data_cleaning.R"><code>cafe_sales_data_cleaning.R</code></a></li>
+<li><strong>Початковий набір даних:</strong> <a
+href="../data/raw/dirty_cafe_sales.csv"><code>data/raw/dirty_cafe_sales.csv</code></a></li>
+<li><strong>Результуючі файли:</strong>
+<ul>
+<li>Очищений набір даних: <a
+href="../data/processed/cleaned_cafe_sales.csv"><code>data/processed/cleaned_cafe_sales.csv</code></a></li>
+<li>Реєстр підозрілих / неповних транзакцій: <a
+href="../data/processed/suspicious_cafe_sales.csv"><code>data/processed/suspicious_cafe_sales.csv</code></a></li>
+<li>Зведені контрольні метрики: <a
+href="results_summary.csv"><code>report/results_summary.csv</code></a></li>
+<li>Журнал виконання R: <a
+href="execution_output.txt"><code>report/execution_output.txt</code></a></li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="мета-роботи">1. Мета роботи</h2>
+<p>Метою цієї лабораторної роботи є проведення всебічного аудиту якості
+сирих транзакційних даних мережі кав’ярень, виявлення дефектів обліку
+(технічних псевдопропусків, помилок касового логування, порушень
+цілісності типів даних та узгодженості формули чека), побудова повністю
+детермінованого конвеєра очищення (Data Cleaning Pipeline) на мові R,
+оцінка фінансового впливу реконструкції даних на виручку закладу та
+підготовка набору ознак для машинного навчання із суворим запобіганням
+витоку даних (Data Leakage).</p>
+<hr />
+<h2 id="вихідний-набір-даних">2. Вихідний набір даних</h2>
+<p>Початковий файл <code>data/raw/dirty_cafe_sales.csv</code> містить
+журнал продажів кав’ярні обсягом <strong>10 000 рядків</strong> та
+<strong>8 стовпців</strong>. При прямому читанні бібліотекою
+<code>readr::read_csv()</code> порожні комірки CSV інтерпретуються як
+системні <code>NA</code>, тоді як технічні маркери помилок
+(<code>"ERROR"</code>, <code>"UNKNOWN"</code>) зчитуються як звичайний
+текст. Через це середовище R автоматично розпізнає всі 8 колонок як
+текстові (<code>character</code>).</p>
+<h3 id="таблиця-структури-змінних">Таблиця структури змінних</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Поле</th>
+<th>Початковий тип</th>
+<th>Очікуваний тип</th>
+<th>Призначення та семантика</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Transaction ID</code></td>
+<td><code>character</code></td>
+<td><code>character</code> (унікальний ключ)</td>
+<td>Унікальний номер транзакції (формат <code>TXN_XXXXXXX</code>)</td>
+</tr>
+<tr>
+<td><code>Item</code></td>
+<td><code>character</code></td>
+<td><code>factor</code> / <code>categorical</code></td>
+<td>Назва замовленої позиції меню кав’ярні</td>
+</tr>
+<tr>
+<td><code>Quantity</code></td>
+<td><code>character</code></td>
+<td><code>integer</code> / <code>numeric</code></td>
+<td>Кількість замовлених одиниць товару в чеку</td>
+</tr>
+<tr>
+<td><code>Price Per Unit</code></td>
+<td><code>character</code></td>
+<td><code>numeric</code> / <code>double</code></td>
+<td>Ціна за одиницю товару в доларах США (USD)</td>
+</tr>
+<tr>
+<td><code>Total Spent</code></td>
+<td><code>character</code></td>
+<td><code>numeric</code> / <code>double</code></td>
+<td>Загальна сума покупки за чеком (USD)</td>
+</tr>
+<tr>
+<td><code>Payment Method</code></td>
+<td><code>character</code></td>
+<td><code>factor</code> / <code>categorical</code></td>
+<td>Спосіб оплати (готівка, платіжна картка, цифровий гаманець)</td>
+</tr>
+<tr>
+<td><code>Location</code></td>
+<td><code>character</code></td>
+<td><code>factor</code> / <code>categorical</code></td>
+<td>Канал обслуговування (на винос / Takeaway чи в закладі /
+In-store)</td>
+</tr>
+<tr>
+<td><code>Transaction Date</code></td>
+<td><code>character</code></td>
+<td><code>Date</code> (YYYY-MM-DD)</td>
+<td>Календарна дата здійснення операції</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="використані-r-бібліотеки">3. Використані R-бібліотеки</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Бібліотека</th>
+<th>Версія</th>
+<th>Призначення у лабораторній роботі</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>readr</code></td>
+<td>2.2.0</td>
+<td>Швидкий імпорт CSV із фіксацією типів
+(<code>col_types = cols(.default = "c")</code>) та експорт фінальних
+наборів</td>
+</tr>
+<tr>
+<td><code>dplyr</code></td>
+<td>1.2.1</td>
+<td>Маніпуляція даними, фільтрація, створення нових ознак
+(<code>mutate</code>), групування та агрегація
+(<code>summarise</code>)</td>
+</tr>
+<tr>
+<td><code>tidyr</code></td>
+<td>1.3.2</td>
+<td>Структурування даних та робота з пропущеними значеннями</td>
+</tr>
+<tr>
+<td><code>stringr</code></td>
+<td>1.6.0</td>
+<td>Обробка рядкових даних, очищення від пробілів (<code>trimws</code>)
+та маніпуляції з маркерами</td>
+</tr>
+<tr>
+<td><code>lubridate</code></td>
+<td>1.9.5</td>
+<td>Парсинг текстових дат у календарний формат (<code>ymd</code>),
+виділення року, місяця, дня та дня тижня</td>
+</tr>
+<tr>
+<td><code>ggplot2</code></td>
+<td>4.0.3</td>
+<td>Побудова публікаційних аналітичних візуалізацій (гістограми,
+діаграми розмаху, стовпчикові графіки)</td>
+</tr>
+<tr>
+<td><code>scales</code></td>
+<td>1.4.0</td>
+<td>Форматування числових шкал (грошові позначення, роздільники тисяч)
+на графіках</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="поетапний-опис-виконання-роботи">4. Поетапний опис виконання
+роботи</h2>
+<h3 id="первинний-аудит-даних">4.1. Первинний аудит даних</h3>
+<h4 id="що-перевірялося">Що перевірялося:</h4>
+<p>Розмірність таблиці, назви стовпців, фактичні типи в R, перші та
+останні записи, зведена описова статистика та наявність системних
+<code>NA</code> одразу після імпорту.</p>
+<h4 id="ключовий-r-код">Ключовий R-код:</h4>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>sales_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;data/raw/dirty_cafe_sales.csv&quot;</span>, <span class="at">col_types =</span> <span class="fu">cols</span>(<span class="at">.default =</span> <span class="st">&quot;c&quot;</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>sales_raw_snapshot <span class="ot">&lt;-</span> sales_raw <span class="co"># Immutability check</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(sales_raw)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(sales_raw, class)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(sales_raw))</span></code></pre></div>
+<h4 id="отримані-результати">Отримані результати:</h4>
+<ul>
+<li>Розмірність: <strong>10 000 рядків, 8 колонок</strong>.</li>
+<li>Усі 8 колонок зчитано як <code>character</code>.</li>
+<li>Системні <code>NA</code>, зафіксовані одразу після імпорту порожніх
+комірок CSV:
+<ul>
+<li><code>Transaction ID</code>: <strong>0</strong></li>
+<li><code>Item</code>: <strong>333</strong></li>
+<li><code>Quantity</code>: <strong>138</strong></li>
+<li><code>Price Per Unit</code>: <strong>179</strong></li>
+<li><code>Total Spent</code>: <strong>173</strong></li>
+<li><code>Payment Method</code>: <strong>2 579</strong></li>
+<li><code>Location</code>: <strong>3 265</strong></li>
+<li><code>Transaction Date</code>: <strong>159</strong></li>
+</ul></li>
+</ul>
+<h4 id="висновок">Висновок:</h4>
+<p>Частина дефектів (порожні комірки) уже під час імпорту набула
+системного статусу <code>NA</code>, тоді як текстові маркери
+<code>ERROR</code> та <code>UNKNOWN</code> залишилися звичайними
+рядками. 7 із 8 колонок містять дефекти і потребують глибокого аудиту.
+Єдиний стовпець без дефектів — <code>Transaction ID</code> (10 000
+валідних унікальних номерів).</p>
+<hr />
+<h3 id="повний-аудит-псевдопропусків-та-маркерів-дефектів">4.2. Повний
+аудит псевдопропусків та маркерів дефектів</h3>
+<h4 id="що-перевірялося-1">Що перевірялося:</h4>
+<p>Частота появи кожного типу дефекту: системні <code>NA</code>, порожні
+рядки <code>""</code>, службові маркери <code>"ERROR"</code>,
+<code>"UNKNOWN"</code>.</p>
+<h4 id="зведена-таблиця-первинних-дефектів-за-колонками">Зведена таблиця
+первинних дефектів за колонками:</h4>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Поле</th>
+<th style="text-align: right;">Formal NA</th>
+<th style="text-align: right;">Порожні рядки</th>
+<th style="text-align: right;">Маркер ERROR</th>
+<th style="text-align: right;">Маркер UNKNOWN</th>
+<th style="text-align: right;">Всього дефектів</th>
+<th style="text-align: right;">Частка дефектів</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Transaction ID</code></td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><strong>0</strong></td>
+<td style="text-align: right;">0.00%</td>
+</tr>
+<tr>
+<td><code>Item</code></td>
+<td style="text-align: right;">333</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">292</td>
+<td style="text-align: right;">344</td>
+<td style="text-align: right;"><strong>969</strong></td>
+<td style="text-align: right;">9.69%</td>
+</tr>
+<tr>
+<td><code>Quantity</code></td>
+<td style="text-align: right;">138</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">170</td>
+<td style="text-align: right;">171</td>
+<td style="text-align: right;"><strong>479</strong></td>
+<td style="text-align: right;">4.79%</td>
+</tr>
+<tr>
+<td><code>Price Per Unit</code></td>
+<td style="text-align: right;">179</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">190</td>
+<td style="text-align: right;">164</td>
+<td style="text-align: right;"><strong>533</strong></td>
+<td style="text-align: right;">5.33%</td>
+</tr>
+<tr>
+<td><code>Total Spent</code></td>
+<td style="text-align: right;">173</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">164</td>
+<td style="text-align: right;">165</td>
+<td style="text-align: right;"><strong>502</strong></td>
+<td style="text-align: right;">5.02%</td>
+</tr>
+<tr>
+<td><code>Payment Method</code></td>
+<td style="text-align: right;">2 579</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">306</td>
+<td style="text-align: right;">293</td>
+<td style="text-align: right;"><strong>3 178</strong></td>
+<td style="text-align: right;">31.78%</td>
+</tr>
+<tr>
+<td><code>Location</code></td>
+<td style="text-align: right;">3 265</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">358</td>
+<td style="text-align: right;">338</td>
+<td style="text-align: right;"><strong>3 961</strong></td>
+<td style="text-align: right;">39.61%</td>
+</tr>
+<tr>
+<td><code>Transaction Date</code></td>
+<td style="text-align: right;">159</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">142</td>
+<td style="text-align: right;">159</td>
+<td style="text-align: right;"><strong>460</strong></td>
+<td style="text-align: right;">4.60%</td>
+</tr>
+</tbody>
+</table>
+<h4 id="важливі-системні-показники">Важливі системні показники:</h4>
+<ul>
+<li><strong>Загальна кількість рядків із хоча б одним дефектом у сирих
+даних:</strong> <strong>6 911</strong> (69.11% вибірки).</li>
+<li><strong>Сумарна кількість дефектних числових комірок:</strong>
+<strong>1 514</strong> (479 + 533 + 502).</li>
+<li><strong>Унікальних рядків із дефектами в числових полях:</strong>
+<strong>1 456</strong>.</li>
+</ul>
+<hr />
+<h3 id="аудит-числових-полів-та-логіки-меню">4.3. Аудит числових полів
+та логіки меню</h3>
+<h4 id="що-перевірялося-2">Що перевірялося:</h4>
+<p>Діапазони значень, квантилі, середні величини та відповідність пар
+<code>Item -&gt; Price</code> офіційному прейскуранту кав’ярні.</p>
+<h4 id="встановлені-відповідності-меню">Встановлені відповідності
+меню:</h4>
+<ul>
+<li><strong>Cookie:</strong> 1.00 USD (унікальна ціна)</li>
+<li><strong>Tea:</strong> 1.50 USD (унікальна ціна)</li>
+<li><strong>Coffee:</strong> 2.00 USD (унікальна ціна)</li>
+<li><strong>Cake:</strong> 3.00 USD (спільна ціна з Juice)</li>
+<li><strong>Juice:</strong> 3.00 USD (спільна ціна з Cake)</li>
+<li><strong>Sandwich:</strong> 4.00 USD (спільна ціна зі Smoothie)</li>
+<li><strong>Smoothie:</strong> 4.00 USD (спільна ціна з Sandwich)</li>
+<li><strong>Salad:</strong> 5.00 USD (унікальна ціна)</li>
+</ul>
+<h4 id="висновок-аудиту-зворотного-звязку-price---item">Висновок аудиту
+зворотного зв’язку Price -&gt; Item:</h4>
+<ul>
+<li>Ціни 1.0, 1.5, 2.0 та 5.0 USD однозначно ідентифікують товар
+(<code>Cookie</code>, <code>Tea</code>, <code>Coffee</code>,
+<code>Salad</code>).</li>
+<li>Ціни 3.0 та 4.0 USD закріплені за парами позицій меню. Автоматичне
+призначення назви товару для них без додаткової інформації є
+неприпустимим.</li>
+</ul>
+<hr />
+<h3 id="логічна-перевірка-узгодженості-формули-чека-в-сирих-даних">4.4.
+Логічна перевірка узгодженості формули чека в сирих даних</h3>
+<h4 id="що-перевірялося-3">Що перевірялося:</h4>
+<p>Виконання рівності
+<code>Total Spent == Quantity * Price Per Unit</code> для всіх
+спостережень, де всі три поля присутні одночасно.</p>
+<h4 id="отримані-результати-1">Отримані результати:</h4>
+<ul>
+<li>Доступно для перевірки: <strong>8 544 рядки</strong>.</li>
+<li>Повністю узгоджені: <strong>8 544 рядки (100.00%)</strong>.</li>
+<li>Невідповідностей формули: <strong>0</strong>.</li>
+<li>Неможливо перевірити через пропуски: <strong>1 456
+рядків</strong>.</li>
+</ul>
+<h4 id="висновок-1">Висновок:</h4>
+<p>Усі доступні для прямої перевірки чеки ідеально підтверджують роботу
+касового алгоритму. Це дає строге математичне обґрунтування для
+детермінованого відновлення втрачених значень за формулою чека.</p>
+<hr />
+<h3 id="аналіз-унікальності-комбінацій-для-відновлення-чеків">4.5.
+Аналіз унікальності комбінацій для відновлення чеків</h3>
+<p>При аналізі записів, де відома лише сума чека
+<code>Total Spent</code>, але втрачені і <code>Quantity</code>, і
+<code>Price Per Unit</code>, було досліджено всі можливі добутки цін
+меню <code>{1.0, 1.5, 2.0, 3.0, 4.0, 5.0}</code> на допустимі кількості
+<code>{1, 2, 3, 4, 5}</code>:</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 35%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Сума чека (Total)</th>
+<th style="text-align: center;">Кількість можливих пар (Price,
+Quantity)</th>
+<th>Єдина допустима комбінація</th>
+<th>Можливість відновлення</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>25.00 USD</strong></td>
+<td style="text-align: center;"><strong>1</strong></td>
+<td>Price = 5.0, Quantity = 5 (Salad)</td>
+<td><strong>Повне детерміноване відновлення</strong></td>
+</tr>
+<tr>
+<td><strong>9.00 USD</strong></td>
+<td style="text-align: center;"><strong>1</strong></td>
+<td>Price = 3.0, Quantity = 3</td>
+<td><strong>Відновлення Q=3, P=3 (Item залишається NA)</strong></td>
+</tr>
+<tr>
+<td>20.00 USD</td>
+<td style="text-align: center;">2</td>
+<td>P=4 * Q=5 АБО P=5 * Q=4</td>
+<td>Неоднозначно (залишається нерозв’язаним NA)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="аудит-дублікатів-та-категоріальних-полів">4.6. Аудит дублікатів
+та категоріальних полів</h3>
+<ul>
+<li><strong>Повні рядкові дублікати:</strong> <strong>0</strong>.</li>
+<li><strong>Дублікати ідентифікаторів
+<code>Transaction ID</code>:</strong> <strong>0</strong> (усі 10 000
+унікальні).</li>
+<li><strong>Категоріальні змінні:</strong> <code>Payment Method</code>
+та <code>Location</code> мають уніфікований регістр і не містять
+синтаксичних помилок; дефекти представлені виключно пропусками та
+маркерами <code>ERROR</code>/<code>UNKNOWN</code>.</li>
+</ul>
+<hr />
+<h3 id="аудит-дат-та-календарний-feature-engineering">4.7. Аудит дат та
+календарний Feature Engineering</h3>
+<ul>
+<li><strong>Успішно розпізнано:</strong> <strong>9 540
+дат</strong>.</li>
+<li><strong>Нерозпізнаних значень:</strong> <strong>460</strong> (159
+системних NA, 159 <code>UNKNOWN</code>, 142 <code>ERROR</code>).</li>
+<li><strong>Календарний діапазон:</strong> з <code>2023-01-01</code> по
+<code>2023-12-31</code> (строго 2023 рік).</li>
+<li><strong>Створені календарні ознаки:</strong> <code>Year</code>,
+<code>Month</code>, <code>Month_Num</code>, <code>Day</code>,
+<code>Day_of_Week</code>.</li>
+</ul>
+<hr />
+<h3 id="аналіз-аномалій-outliers">4.8. Аналіз аномалій (Outliers)</h3>
+<h4 id="що-перевірялося-4">Що перевірялося:</h4>
+<p>Розрахунок міжквартильного розмаху (IQR) для числових змінних та
+візуалізація розподілу <code>Total Spent</code>.</p>
+<h4 id="отримані-результати-2">Отримані результати:</h4>
+<ul>
+<li>Q1 = 4.0, Median = 8.0, Q3 = 12.0, IQR = 8.0.</li>
+<li>Верхня межа за правилом Тьюкі: 12.0 + 1.5 * 8.0 = 24.0.</li>
+<li>У сирих даних зафіксовано <strong>259 чеків</strong> на суму 25.00
+USD.</li>
+<li>В очищених даних зафіксовано <strong>269 чеків</strong> на суму
+25.00 USD (додалося 10 чеків, де первинний Total був відсутній і
+відновлений як 5 порцій Salad по 5.00 USD).</li>
+<li><strong>Змістовна перевірка:</strong> Усі 269 транзакцій на суму
+25.00 USD є на 100% підтвердженими валідними замовленнями 5 порцій
+салату за ціною 5.00 USD (5 * 5 = 25).</li>
+</ul>
+<h4 id="візуалізації">Візуалізації:</h4>
+<p>Нижче наведено розподіли ознак та ілюстрацію межі викидів:</p>
+<p><img src="../figures/01_quantity_distribution.png"
+alt="Розподіл кількості" /> <em>Рис. 1. Розподіл кількості замовлених
+товарів у чеку (Quantity).</em></p>
+<p><img src="../figures/02_price_distribution.png" alt="Розподіл цін" />
+<em>Рис. 2. Розподіл вартості одиниці товару за меню кав’ярні (Price Per
+Unit).</em></p>
+<p><img src="../figures/03_total_spent_distribution.png"
+alt="Розподіл Total Spent" /> <em>Рис. 3. Гістограма сум чеків (Total
+Spent) із підсвічуванням формальних викидів IQR.</em></p>
+<p><img src="../figures/04_total_spent_boxplot.png"
+alt="Боксплот Total Spent" /> <em>Рис. 4. Діаграма розмаху (Boxplot)
+суми транзакцій.</em></p>
+<hr />
+<h2 id="опис-конвеєра-очищення-cleaning-pipeline">5. Опис конвеєра
+очищення (Cleaning Pipeline)</h2>
+<p>Очищення реалізовано у вигляді строго детермінованого неруйнівного
+конвеєра:</p>
+<pre><code>[Raw CSV] 
+   │
+   ▼
+1. Стандартизація маркерів (to_na) та числовий парсинг
+   │
+   ▼
+2. Відновлення Price з відомого Item (479 цін)
+   │
+   ▼
+3. Відновлення Price з Total / Quantity за меню (48 цін)
+   │
+   ▼
+4. Унікальне відновлення для Total=25 (P=5, Q=5) та Total=9 (P=3, Q=3) (2 чеки)
+   │
+   ▼
+5. Відновлення Item за унікальними цінами $1, $1.5, $2, $5 (490 товарів)
+   │
+   ▼
+6. Відновлення Quantity з Total / Price (456 кількостей)
+   │
+   ▼
+7. Розрахунок calculated_total та відновлення Total Spent (479 сум)
+   │
+   ▼
+8. Контрольна валідація узгодженості сум (9 976 з 9 976, 100.00%)
+   │
+   ▼
+9. Календарний Feature Engineering та формування прапорців якості</code></pre>
+<h3 id="дворівнева-система-прапорців-аудиту">Дворівнева система
+прапорців аудиту:</h3>
+<ol type="1">
+<li><strong>Первинний слід дефектів (Raw Audit Trail):</strong>
+<ul>
+<li><code>had_any_raw_defect</code>: рядок спочатку містив дефект
+(<strong>6 911 рядків</strong>);</li>
+<li><code>was_item_recovered</code>: відновлено товар (<strong>490
+рядків</strong>);</li>
+<li><code>was_price_recovered</code>: відновлено ціну (<strong>529
+рядків</strong>);</li>
+<li><code>was_quantity_recovered</code>: відновлено кількість
+(<strong>458 рядків</strong>);</li>
+<li><code>was_total_recovered</code>: відновлено суму чека (<strong>479
+рядків</strong>).</li>
+</ul></li>
+<li><strong>Залишкові нерозв’язані дефекти після очищення (Post-cleaning
+Missing Flags):</strong>
+<ul>
+<li><code>has_missing_item</code>: <strong>479 рядків</strong> (ціни
+$3.0 та $4.0 або відсутня ціна);</li>
+<li><code>has_missing_quantity</code>: <strong>21 рядок</strong>;</li>
+<li><code>has_missing_price</code>: <strong>4 рядки</strong>;</li>
+<li><code>has_missing_total</code>: <strong>23 рядки</strong>;</li>
+<li><code>has_missing_payment</code>: <strong>3 178
+рядків</strong>;</li>
+<li><code>has_missing_location</code>: <strong>3 961
+рядок</strong>;</li>
+<li><code>has_missing_date</code>: <strong>460 рядків</strong>;</li>
+<li><code>is_suspicious</code>: <strong>6 229 рядків</strong> (наявність
+хоча б одного нерозв’язаного поля; саме ці рядки експортуються у
+<code>suspicious_cafe_sales.csv</code>).</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="журнал-очищення-даних-data-cleaning-log">6. Журнал очищення
+даних (Data Cleaning Log)</h2>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 25%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>Проблема</th>
+<th>Як виявлено</th>
+<th>Правило обробки (Дія)</th>
+<th style="text-align: right;">Кількість елементів</th>
+<th>Обґрунтування правила</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Текстові маркери помилок у числових стовпцях</td>
+<td>Аудит типів і <code>as.numeric()</code></td>
+<td>Конвертація в системний <code>NA</code></td>
+<td style="text-align: right;">1 514 комірок (1 456 рядків)</td>
+<td>Текст <code>"ERROR"</code> не є числом; заміна на <code>NA</code>
+уможливлює коректні обчислення</td>
+</tr>
+<tr>
+<td>Пропуски у сумі чека <code>Total Spent</code></td>
+<td>Порівняння з <code>Quantity * Price</code></td>
+<td>Розрахунок <code>calculated_total</code></td>
+<td style="text-align: right;">479 рядків</td>
+<td>Ліквідує штучну недооцінку виручки кав’ярні</td>
+</tr>
+<tr>
+<td>Пропуски ціни при відомому товарі</td>
+<td>Крос-таблиця <code>Item</code> та <code>Price</code></td>
+<td>Підтягування фіксованої вартості меню</td>
+<td style="text-align: right;">479 рядків</td>
+<td>Позиції меню мають суворо фіксовані ціни</td>
+</tr>
+<tr>
+<td>Пропуски ціни при відомих <code>Quantity</code> та
+<code>Total Spent</code></td>
+<td>Аналіз залишку після кроку 1</td>
+<td>Розрахунок <code>Price = Total / Quantity</code></td>
+<td style="text-align: right;">48 рядків</td>
+<td>Частка точно відповідає прейскуранту меню ($1, $1.5, $2, $3, $4,
+$5)</td>
+</tr>
+<tr>
+<td>Чеки без Q та P з унікальною сумою</td>
+<td>Комбінаторика <code>Price * Quantity</code></td>
+<td>5x5 для $25 та 3x3 для $9</td>
+<td style="text-align: right;">2 рядки</td>
+<td>Доведено математичну єдиність комбінацій</td>
+</tr>
+<tr>
+<td>Пропуски товару при унікальній ціні</td>
+<td>Аналіз прейскуранту меню</td>
+<td>Відновлення Cookie, Tea, Coffee, Salad</td>
+<td style="text-align: right;">490 рядків</td>
+<td>Ціни $1, $1.5, $2, $5 однозначно ідентифікують товар</td>
+</tr>
+<tr>
+<td>Пропуски кількості при відомих Total та Price</td>
+<td>Рівняння чека <code>Total = Q * P</code></td>
+<td>Розрахунок <code>Quantity = round(Total / Price)</code></td>
+<td style="text-align: right;">456 рядків</td>
+<td>100% узгодженість формули на валідних даних</td>
+</tr>
+<tr>
+<td>Нерозпізнані дати</td>
+<td>Спроба парсингу <code>lubridate::ymd()</code></td>
+<td>Конвертація в <code>NA</code>, створення прапорця</td>
+<td style="text-align: right;">460 рядків</td>
+<td>Неможливо достовірно вгадати дату візиту клієнта</td>
+</tr>
+<tr>
+<td>Пропуски у способі оплати</td>
+<td>Аудит унікальних категорій</td>
+<td>Конвертація в <code>NA</code>, якісний прапорець</td>
+<td style="text-align: right;">3 178 рядків</td>
+<td>Приписування оплати карткою чи готівкою було б фальсифікацією</td>
+</tr>
+<tr>
+<td>Пропуски у локації замовлення</td>
+<td>Аудит унікальних категорій</td>
+<td>Конвертація в <code>NA</code>, якісний прапорець</td>
+<td style="text-align: right;">3 961 рядок</td>
+<td>Зберігає коректну ринкову частку каналів продажу</td>
+</tr>
+<tr>
+<td>Формальні викиди суми чека (25.00 USD)</td>
+<td>Правило 1.5 * IQR Тьюкі</td>
+<td>Збереження в наборі без змін</td>
+<td style="text-align: right;">269 рядків</td>
+<td>Замовлення 5 порцій Salad по 5.00 USD є абсолютно валідним</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="порівняння-даних-до-та-після-очищення-raw-vs-cleaned">7.
+Порівняння даних до та після очищення (Raw vs Cleaned)</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Метрика</th>
+<th style="text-align: right;">Raw Data</th>
+<th style="text-align: right;">Cleaned Data</th>
+<th style="text-align: right;">Абсолютна різниця</th>
+<th>Коментар</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Загальна кількість записів</td>
+<td style="text-align: right;">10 000</td>
+<td style="text-align: right;">10 000</td>
+<td style="text-align: right;">0</td>
+<td>Рядки не видалялися, структура збережена</td>
+</tr>
+<tr>
+<td>Валідні транзакції з сумою</td>
+<td style="text-align: right;">9 498</td>
+<td style="text-align: right;">9 977</td>
+<td style="text-align: right;">+479</td>
+<td>Відновлено за формулою чека</td>
+</tr>
+<tr>
+<td>Загальний виторг кав’ярні</td>
+<td style="text-align: right;">84 763.50 USD</td>
+<td style="text-align: right;">89 096.00 USD</td>
+<td style="text-align: right;">+4 332.50 USD</td>
+<td>Приріст виручки становить <strong>+5.11%</strong></td>
+</tr>
+<tr>
+<td>Пропущені назви товарів (<code>Item</code>)</td>
+<td style="text-align: right;">969</td>
+<td style="text-align: right;">479</td>
+<td style="text-align: right;">-490</td>
+<td>Відновлено позиції з унікальною ціною меню</td>
+</tr>
+<tr>
+<td>Пропущені ціни (<code>Price Per Unit</code>)</td>
+<td style="text-align: right;">533</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">-529</td>
+<td>Відновлено з меню та формули <code>Total / Quantity</code></td>
+</tr>
+<tr>
+<td>Пропущена кількість (<code>Quantity</code>)</td>
+<td style="text-align: right;">479</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">-458</td>
+<td>Відновлено як <code>Total / Price</code> та з унікальних сум</td>
+</tr>
+<tr>
+<td>Пропущена сума (<code>Total Spent</code>)</td>
+<td style="text-align: right;">502</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">-479</td>
+<td>Відновлено як <code>Quantity * Price</code></td>
+</tr>
+<tr>
+<td>Пропущені способи оплати</td>
+<td style="text-align: right;">3 178</td>
+<td style="text-align: right;">3 178</td>
+<td style="text-align: right;">0</td>
+<td>Законсервовано як <code>NA</code> без припущень</td>
+</tr>
+<tr>
+<td>Пропущені локації замовлення</td>
+<td style="text-align: right;">3 961</td>
+<td style="text-align: right;">3 961</td>
+<td style="text-align: right;">0</td>
+<td>Законсервовано як <code>NA</code> без припущень</td>
+</tr>
+<tr>
+<td>Невалідні дати</td>
+<td style="text-align: right;">460</td>
+<td style="text-align: right;">460</td>
+<td style="text-align: right;">0</td>
+<td>Зафіксовано як <code>NA</code> з прапорцем</td>
+</tr>
+<tr>
+<td>Повні дублікати рядків</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td>Відсутні в обох версіях</td>
+</tr>
+<tr>
+<td>Повторні <code>Transaction ID</code></td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td>Усі ID залишаються унікальними</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="структура-залишкових-пропусків-у-параметрах-замовлення">Структура
+залишкових пропусків у параметрах замовлення:</h3>
+<p>Аналіз матриці пропусків показав: 1. <strong>475 рядків:</strong>
+відомі <code>Quantity</code>, <code>Price</code> та <code>Total</code>,
+пропущено лише <code>Item</code> (ціни $3.0 або $4.0); 2. <strong>20
+рядків:</strong> відомі <code>Item</code> та <code>Price</code>,
+пропущено <code>Quantity</code> та <code>Total</code>; 3. <strong>3
+рядки:</strong> відома <code>Quantity</code>, пропущено
+<code>Item</code>, <code>Price</code> та <code>Total</code>; 4.
+<strong>1 рядок:</strong> відомий <code>Total</code> ($20), пропущено
+<code>Item</code>, <code>Quantity</code> та <code>Price</code>.</p>
+<blockquote>
+<p><strong>Важливий висновок:</strong> У датасеті <strong>немає жодного
+рядка</strong>, де одночасно були б втрачені всі 4 атрибути
+замовлення.</p>
+</blockquote>
+<hr />
+<h2 id="бізнес-перевірки">8. Бізнес-перевірки</h2>
+<h3 id="бізнес-перевірка-1-загальний-дохід">8.1. Бізнес-перевірка 1:
+Загальний дохід</h3>
+<ul>
+<li><strong>Raw revenue:</strong> 84 763.50 USD (9 498 валідних
+транзакцій).</li>
+<li><strong>Cleaned revenue:</strong> 89 096.00 USD (9 977 валідних
+транзакцій).</li>
+<li><strong>Різниця:</strong> +4 332.50 USD (+5.11%, відновлено 479
+чеків).</li>
+</ul>
+<hr />
+<h3 id="бізнес-перевірка-2-незалежний-рейтинг-популярності-товарів">8.2.
+Бізнес-перевірка 2: Незалежний рейтинг популярності товарів</h3>
+<p>Управлінське питання: <em>“Який товар потрібно закуповувати
+найбільше?”</em></p>
+<p>Три рейтинги розраховано <strong>незалежно</strong>, що виключає
+штучне заниження транзакцій при відсутності суми:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Товар (Item)</th>
+<th>Транзакцій (Ранг)</th>
+<th>Продано одиниць (Ранг)</th>
+<th>Загальний дохід, USD (Ранг)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Salad</strong></td>
+<td>1 273 [Ранг 2]</td>
+<td>3 824 [Ранг 2]</td>
+<td><strong>19 120.00 [Ранг 1]</strong></td>
+</tr>
+<tr>
+<td><strong>Sandwich</strong></td>
+<td>1 131 [Ранг 7]</td>
+<td>3 429 [Ранг 7]</td>
+<td><strong>13 716.00 [Ранг 2]</strong></td>
+</tr>
+<tr>
+<td><strong>Smoothie</strong></td>
+<td>1 096 [Ранг 8]</td>
+<td>3 336 [Ранг 8]</td>
+<td><strong>13 344.00 [Ранг 3]</strong></td>
+</tr>
+<tr>
+<td><strong>Juice</strong></td>
+<td>1 171 [Ранг 5]</td>
+<td>3 505 [Ранг 5]</td>
+<td><strong>10 515.00 [Ранг 4]</strong></td>
+</tr>
+<tr>
+<td><strong>Cake</strong></td>
+<td>1 139 [Ранг 6]</td>
+<td>3 468 [Ранг 6]</td>
+<td><strong>10 404.00 [Ранг 5]</strong></td>
+</tr>
+<tr>
+<td><strong>Coffee</strong></td>
+<td><strong>1 291 [Ранг 1]</strong></td>
+<td><strong>3 904 [Ранг 1]</strong></td>
+<td><strong>7 808.00 [Ранг 6]</strong></td>
+</tr>
+<tr>
+<td><strong>Tea</strong></td>
+<td>1 207 [Ранг 4]</td>
+<td>3 650 [Ранг 3]</td>
+<td><strong>5 475.00 [Ранг 7]</strong></td>
+</tr>
+<tr>
+<td><strong>Cookie</strong></td>
+<td>1 213 [Ранг 3]</td>
+<td>3 598 [Ранг 4]</td>
+<td><strong>3 598.00 [Ранг 8]</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="висновки">Висновки:</h4>
+<ul>
+<li>Лідер за кількістю транзакцій та одиниць — <strong>Coffee
+(Кава)</strong> (1 291 чек, 3 904 порції). Її потрібно закуповувати
+найбільше за обсягом (штуки, стаканчики, зерна).</li>
+<li>Лідер за загальним виторгом — <strong>Salad (Салат)</strong> (19
+120.00 USD). Салат коштує 5.00 USD, тому генерує найбільший грошовий
+потік.</li>
+<li>Кава посідає лише 6-те місце за виручкою (7 808.00 USD) через низьку
+ціну (2.00 USD).</li>
+</ul>
+<hr />
+<h3 id="бізнес-перевірка-3-способи-оплати">8.3. Бізнес-перевірка 3:
+Способи оплати</h3>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Спосіб оплати</th>
+<th style="text-align: right;">Транзакцій (усього)</th>
+<th style="text-align: right;">Частка транзакцій</th>
+<th style="text-align: right;">Транзакцій з виручкою</th>
+<th style="text-align: right;">Загальний виторг (USD)</th>
+<th style="text-align: right;">Частка виручки</th>
+<th style="text-align: right;">Середній чек (USD)</th>
+<th style="text-align: right;">Медіанний чек (USD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Credit Card</strong></td>
+<td style="text-align: right;">2 273</td>
+<td style="text-align: right;">33.32%</td>
+<td style="text-align: right;">2 269</td>
+<td style="text-align: right;">20 466.00</td>
+<td style="text-align: right;">33.40%</td>
+<td style="text-align: right;">9.02</td>
+<td style="text-align: right;">8.00</td>
+</tr>
+<tr>
+<td><strong>Digital Wallet</strong></td>
+<td style="text-align: right;">2 291</td>
+<td style="text-align: right;">33.58%</td>
+<td style="text-align: right;">2 285</td>
+<td style="text-align: right;">20 414.00</td>
+<td style="text-align: right;">33.31%</td>
+<td style="text-align: right;">8.93</td>
+<td style="text-align: right;">8.00</td>
+</tr>
+<tr>
+<td><strong>Cash</strong></td>
+<td style="text-align: right;">2 258</td>
+<td style="text-align: right;">33.10%</td>
+<td style="text-align: right;">2 254</td>
+<td style="text-align: right;">20 402.50</td>
+<td style="text-align: right;">33.29%</td>
+<td style="text-align: right;">9.05</td>
+<td style="text-align: right;">8.00</td>
+</tr>
+<tr>
+<td><strong>Разом відомих</strong></td>
+<td style="text-align: right;"><strong>6 822</strong></td>
+<td style="text-align: right;"><strong>100.00%</strong></td>
+<td style="text-align: right;"><strong>6 808</strong></td>
+<td style="text-align: right;"><strong>61 282.50</strong></td>
+<td style="text-align: right;"><strong>100.00%</strong></td>
+<td style="text-align: right;"><strong>9.00</strong></td>
+<td style="text-align: right;"><strong>8.00</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="висновки-1">Висновки:</h4>
+<ul>
+<li>Серед 6 822 транзакцій із відомим способом оплати частки трьох
+методів приблизно однакові (Cash ~33.10%, Credit Card ~33.32%, Digital
+Wallet ~33.58%).</li>
+<li>Водночас 3 178 транзакцій (31.78%) мають невідомий спосіб оплати
+(<code>NA</code>).</li>
+<li>Середні та медіанні чеки однакові між усіма методами (~9.00 USD
+середній, 8.00 USD медіанний).</li>
+</ul>
+<hr />
+<h3 id="бізнес-перевірка-4-часові-закономірності">8.4. Бізнес-перевірка
+4: Часові закономірності</h3>
+<h4 id="розподіл-виручки-за-днями-тижня">Розподіл виручки за днями
+тижня:</h4>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>День тижня</th>
+<th style="text-align: right;">Транзакцій (дата)</th>
+<th style="text-align: right;">Транзакцій з виручкою</th>
+<th style="text-align: right;">Загальний дохід (USD)</th>
+<th style="text-align: right;">Середній чек (USD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Monday</strong></td>
+<td style="text-align: right;">1 382</td>
+<td style="text-align: right;">1 379</td>
+<td style="text-align: right;">12 140.00</td>
+<td style="text-align: right;">8.80</td>
+</tr>
+<tr>
+<td><strong>Tuesday</strong></td>
+<td style="text-align: right;">1 311</td>
+<td style="text-align: right;">1 308</td>
+<td style="text-align: right;">12 039.50</td>
+<td style="text-align: right;">9.20</td>
+</tr>
+<tr>
+<td><strong>Wednesday</strong></td>
+<td style="text-align: right;">1 341</td>
+<td style="text-align: right;">1 339</td>
+<td style="text-align: right;">11 680.50</td>
+<td style="text-align: right;">8.72</td>
+</tr>
+<tr>
+<td><strong>Thursday</strong></td>
+<td style="text-align: right;"><strong>1 380</strong></td>
+<td style="text-align: right;"><strong>1 376</strong></td>
+<td style="text-align: right;"><strong>12 401.50</strong></td>
+<td style="text-align: right;">9.01</td>
+</tr>
+<tr>
+<td><strong>Friday</strong></td>
+<td style="text-align: right;">1 388</td>
+<td style="text-align: right;">1 383</td>
+<td style="text-align: right;">12 334.00</td>
+<td style="text-align: right;">8.92</td>
+</tr>
+<tr>
+<td><strong>Saturday</strong></td>
+<td style="text-align: right;">1 358</td>
+<td style="text-align: right;">1 354</td>
+<td style="text-align: right;">12 039.50</td>
+<td style="text-align: right;">8.89</td>
+</tr>
+<tr>
+<td><strong>Sunday</strong></td>
+<td style="text-align: right;">1 380</td>
+<td style="text-align: right;">1 378</td>
+<td style="text-align: right;">12 287.50</td>
+<td style="text-align: right;">8.92</td>
+</tr>
+</tbody>
+</table>
+<p><img src="../figures/05_revenue_by_weekday.png"
+alt="Виручка за днями тижня" /> <em>Рис. 5. Динаміка виручки за днями
+тижня.</em></p>
+<h4 id="розподіл-виручки-за-місяцями-2023-року">Розподіл виручки за
+місяцями 2023 року:</h4>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Місяць</th>
+<th style="text-align: right;">Транзакцій (дата)</th>
+<th style="text-align: right;">Транзакцій з виручкою</th>
+<th style="text-align: right;">Загальний дохід (USD)</th>
+<th style="text-align: right;">Середній чек (USD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01 January</td>
+<td style="text-align: right;">818</td>
+<td style="text-align: right;">815</td>
+<td style="text-align: right;">7 254.00</td>
+<td style="text-align: right;">8.90</td>
+</tr>
+<tr>
+<td>02 February</td>
+<td style="text-align: right;">727</td>
+<td style="text-align: right;">726</td>
+<td style="text-align: right;">6 644.00</td>
+<td style="text-align: right;">9.15</td>
+</tr>
+<tr>
+<td>03 March</td>
+<td style="text-align: right;">827</td>
+<td style="text-align: right;">826</td>
+<td style="text-align: right;">7 216.00</td>
+<td style="text-align: right;">8.74</td>
+</tr>
+<tr>
+<td>04 April</td>
+<td style="text-align: right;">774</td>
+<td style="text-align: right;">771</td>
+<td style="text-align: right;">7 179.00</td>
+<td style="text-align: right;">9.31</td>
+</tr>
+<tr>
+<td>05 May</td>
+<td style="text-align: right;">777</td>
+<td style="text-align: right;">773</td>
+<td style="text-align: right;">6 957.50</td>
+<td style="text-align: right;">9.00</td>
+</tr>
+<tr>
+<td><strong>06 June</strong></td>
+<td style="text-align: right;"><strong>818</strong></td>
+<td style="text-align: right;"><strong>817</strong></td>
+<td style="text-align: right;"><strong>7 353.00</strong></td>
+<td style="text-align: right;">9.00</td>
+</tr>
+<tr>
+<td>07 July</td>
+<td style="text-align: right;">791</td>
+<td style="text-align: right;">789</td>
+<td style="text-align: right;">6 877.50</td>
+<td style="text-align: right;">8.72</td>
+</tr>
+<tr>
+<td>08 August</td>
+<td style="text-align: right;">803</td>
+<td style="text-align: right;">802</td>
+<td style="text-align: right;">7 112.50</td>
+<td style="text-align: right;">8.87</td>
+</tr>
+<tr>
+<td>09 September</td>
+<td style="text-align: right;">788</td>
+<td style="text-align: right;">786</td>
+<td style="text-align: right;">6 871.00</td>
+<td style="text-align: right;">8.74</td>
+</tr>
+<tr>
+<td>10 October</td>
+<td style="text-align: right;">838</td>
+<td style="text-align: right;">837</td>
+<td style="text-align: right;">7 314.00</td>
+<td style="text-align: right;">8.74</td>
+</tr>
+<tr>
+<td>11 November</td>
+<td style="text-align: right;">784</td>
+<td style="text-align: right;">784</td>
+<td style="text-align: right;">6 967.00</td>
+<td style="text-align: right;">8.89</td>
+</tr>
+<tr>
+<td>12 December</td>
+<td style="text-align: right;">795</td>
+<td style="text-align: right;">791</td>
+<td style="text-align: right;">7 177.00</td>
+<td style="text-align: right;">9.07</td>
+</tr>
+</tbody>
+</table>
+<p><img src="../figures/06_revenue_by_month.png"
+alt="Динаміка за місяцями" /> <em>Рис. 6. Динаміка виручки кав’ярні по
+місяцях 2023 року.</em></p>
+<h4 id="висновки-2">Висновки:</h4>
+<ul>
+<li>Серед 9 540 транзакцій із відомою датою 9 517 мають валідну суму
+чека та утворюють часову вибірку виручки.</li>
+<li>Піковий день за виручкою — <strong>четвер (Thursday, 12 401.50
+USD)</strong>.</li>
+<li>Піковий місяць — <strong>червень (June, 7 353.00 USD)</strong>,
+друге місце — жовтень (7 314.00 USD).</li>
+</ul>
+<hr />
+<h2 id="підготовка-до-машинного-навчання-ml-preparation">9. Підготовка
+до машинного навчання (ML Preparation)</h2>
+<h3 id="таблиця-ролей-змінних-та-передобробки">Таблиця ролей змінних та
+передобробки</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Поле</th>
+<th>Роль у ML</th>
+<th>Чи можна подавати напряму?</th>
+<th>Необхідна попередня обробка</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Transaction ID</code></td>
+<td><code>identifier</code> / <code>exclude</code></td>
+<td>Ні</td>
+<td>Виключити з простору ознак (штучний ключ, що веде до
+overfitting)</td>
+</tr>
+<tr>
+<td><code>Item</code></td>
+<td><code>categorical feature</code></td>
+<td>Ні</td>
+<td>One-Hot Encoding або Target Encoding; пропуски виділити класом
+<code>"Missing"</code></td>
+</tr>
+<tr>
+<td><code>Quantity</code></td>
+<td><code>numeric feature</code> / <code>context-dependent</code></td>
+<td>Ні</td>
+<td>Якщо кошик відомий — масштабування. Якщо прогноз до замовлення —
+ознака недоступна (leakage)</td>
+</tr>
+<tr>
+<td><code>Price Per Unit</code></td>
+<td><code>numeric feature</code> / <code>context-dependent</code></td>
+<td>Ні</td>
+<td>Аналогічно до Quantity: відома лише після вибору товару
+клієнтом</td>
+</tr>
+<tr>
+<td><code>Payment Method</code></td>
+<td><code>categorical feature</code></td>
+<td>Ні</td>
+<td>One-Hot Encoding; пропуски кодувати окремою бінарною категорією
+<code>"Unknown"</code></td>
+</tr>
+<tr>
+<td><code>Location</code></td>
+<td><code>categorical feature</code></td>
+<td>Ні</td>
+<td>Binary Encoding (<code>Takeaway</code> = 1, <code>In-store</code> =
+0) або окремий клас пропуску</td>
+</tr>
+<tr>
+<td><code>Transaction Date</code></td>
+<td><code>datetime feature</code></td>
+<td>Ні</td>
+<td>Виділити ознаки: день тижня, місяць, вихідний/робочий, циклічні
+sin/cos ознаки</td>
+</tr>
+<tr>
+<td><code>Total Spent</code></td>
+<td><code>target</code> (y)</td>
+<td>Так</td>
+<td>Цільова змінна для регресії; рядки без таргету вилучаються з
+train/test</td>
+</tr>
+<tr>
+<td><code>calculated_total</code></td>
+<td><code>exclude</code></td>
+<td>Ні</td>
+<td><strong>Категорично виключити.</strong> Створює 100% витік даних
+(Data Leakage)</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="концептуальний-контекст-data-leakage-та-часова-доступність-ознак">Концептуальний
+контекст Data Leakage та часова доступність ознак</h3>
+<ol type="1">
+<li><strong>Прямий витік таргету (Target Proxy Leakage):</strong>
+Включення <code>calculated_total</code> у модель надає алгоритму точне
+значення цільової змінної. Модель отримає вагу 1.0 і покаже фіктивний
+<span class="math inline"><em>R</em><sup>2</sup> = 1.0</span>, але не
+матиме жодної прогнозної сили.</li>
+<li><strong>Контекст моменту прогнозу (Prediction Time
+Availability):</strong>
+<ul>
+<li>Якщо задача моделі — спрогнозувати суму чека <strong>в момент
+приходу відвідувача</strong> (наприклад, за часом доби, локацією та днем
+тижня для планування персоналу), змінні <code>Quantity</code>,
+<code>Price</code> та <code>Item</code> ще <strong>не існують</strong> —
+їх використання є грубим витоком інформації з майбутнього.</li>
+<li>Якщо ж клієнт уже підійшов до каси і замовлення сформоване (відомі
+найменування, кількість та ціни), <strong>машинне навчання взагалі не
+потрібне</strong> — точний підсумок обчислюється тривіальним множенням
+<code>Quantity * Price</code>.</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="робота-з-пропусками-перед-ml">10. Робота з пропусками перед
+ML</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 30%" />
+<col style="width: 23%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Поле</th>
+<th style="text-align: right;">Кількість NA</th>
+<th>Запропонована ML-стратегія</th>
+<th>Теоретичне обґрунтування</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Item</code></td>
+<td style="text-align: right;">479</td>
+<td>Окрема категорія <code>"Missing_Item"</code> або вилучення</td>
+<td>Заміна на моду спотворить структуру попиту. Окремий клас зберігає
+інформацію про збій касового апарату.</td>
+</tr>
+<tr>
+<td><code>Quantity</code></td>
+<td style="text-align: right;">21</td>
+<td>Імпутація медіаною по навчальній вибірці (train set)</td>
+<td>Пропусків мізерна частка (0.21%). Медіана (3 одиниці) мінімізує
+зміщення розподілу.</td>
+</tr>
+<tr>
+<td><code>Price Per Unit</code></td>
+<td style="text-align: right;">4</td>
+<td>Вилучення рядків</td>
+<td>Залишилися в рядках без назви товару. 4 спостереження (0.04%)
+безпечно вилучити.</td>
+</tr>
+<tr>
+<td><code>Total Spent</code> (Target)</td>
+<td style="text-align: right;">23</td>
+<td>Вилучення з навчального набору</td>
+<td>Навчання моделі з учителем на штучно вигаданих значеннях таргету є
+неприпустимим.</td>
+</tr>
+<tr>
+<td><code>Payment Method</code></td>
+<td style="text-align: right;">3 178</td>
+<td>Створення окремої категорії <code>"Unknown_Payment"</code></td>
+<td>Понад 31% пропусків. Вилучення знищило б третину даних, окрема
+категорія зберігає обсяг вибірки.</td>
+</tr>
+<tr>
+<td><code>Location</code></td>
+<td style="text-align: right;">3 961</td>
+<td>Створення окремої категорії <code>"Unknown_Location"</code></td>
+<td>Майже 40% пропусків. Окремий клас дозволяє деревам рішень
+враховувати сам факт відсутності локації.</td>
+</tr>
+<tr>
+<td><code>Transaction Date</code></td>
+<td style="text-align: right;">460</td>
+<td>Вилучення для time-series / категорія <code>"No_Date"</code></td>
+<td>Для моделей часових рядів дата обов’язкова; для статичних регресій
+дату замінюють категорією.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Запобігання Data Leakage під час імпутації:</strong> Будь-які
+статистичні оцінки (медіана, середнє, мода) повинні розраховуватися
+<strong>виключно на навчальній вибірці (train set)</strong> після
+виконання train/test split.</p>
+</blockquote>
+<hr />
+<h2 id="підсумкова-валідація-final-validation">11. Підсумкова валідація
+(Final Validation)</h2>
+<p>Підсумковий запуск автоматизованих перевірок <code>stopifnot()</code>
+у R підтвердив: - Сувора незмінність <code>sales_raw</code>
+(immutability check): <strong>PASS (100% ідентичність первинному
+знімку)</strong>. - Розмірність <code>sales_clean</code>: <strong>10 000
+рядків, 28 колонок</strong>. - Типи даних: <code>Quantity</code>,
+<code>Price Per Unit</code>, <code>Total Spent</code>,
+<code>calculated_total</code> — <code>numeric</code>;
+<code>Transaction Date</code> — <code>Date</code>. - Повних дублікатів
+та повторних ID: <strong>0</strong>. - Логічна узгодженість валідних сум
+чека: <strong>100.00% (9 976 із 9 976 перевірених)</strong>. -
+Залишкових маркерів <code>"ERROR"</code> або <code>"UNKNOWN"</code> у
+числових стовпцях: <strong>0</strong>. - Кількість рядків з неповними
+даними (<code>is_suspicious</code>): <strong>6 229</strong>.</p>
+<hr />
+<h2 id="фінальні-висновки">12. Фінальні висновки</h2>
+<p>У ході лабораторної роботи було проведено поглиблений аудит та повне
+детерміноване очищення набору даних транзакцій мережі кав’ярень Dirty
+Café Sales.</p>
+<h3 id="головні-досягнення">Головні досягнення:</h3>
+<ol type="1">
+<li>Безпечно реконструйовано <strong>+4 332.50 USD</strong> втраченої
+виручки (+5.11%) та <strong>479 чеків</strong> на основі прямої формули
+чека без використання евристик чи штучного придумування чисел.</li>
+<li>Відновлено <strong>490 назв товарів</strong> за унікальними цінами
+меню кав’ярні та <strong>529 цін</strong>.</li>
+<li>Сформовано систему якісних прапорців (<code>is_suspicious</code>),
+що дозволило зберегти всі 10 000 спостережень для аналізу без
+необґрунтованого видалення рядків.</li>
+<li>Продемонстровано принципову різницю в лідерстві товарів залежно від
+критерію: <strong>Coffee</strong> лідирує за замовленнями (1 291) та
+штуками (3 904), тоді як <strong>Salad</strong> лідирує за виручкою (19
+120.00 USD).</li>
+<li>Підготовлено набір ознак для моделювання із суворим дотриманням
+правил запобігання витоку даних (Data Leakage).</li>
+</ol>
+<hr />
+<h2 id="відповіді-на-контрольні-запитання-рефлексії">13. Відповіді на
+контрольні запитання рефлексії</h2>
+<ol type="1">
+<li><p><strong>Яка проблема в даних була найкритичнішою?</strong><br />
+Найкритичнішою проблемою було маскування відсутніх значень та технічних
+помилок текстовими маркерами (<code>ERROR</code>, <code>UNKNOWN</code>,
+<code>""</code>) у стовпцях сум і цін. Це блокувало приведення типів,
+унеможливлювало математичні операції та призводило до штучної втрати
+5.11% виручки кав’ярні при прямому читанні файлу.</p></li>
+<li><p><strong>Яке ваше правило очистки було найбільш
+дискусійним?</strong><br />
+Найбільш дискусійним було детерміноване відновлення назви товару за його
+унікальною ціною (1.0 USD -&gt; Cookie, 1.5 USD -&gt; Tea, 2.0 USD -&gt;
+Coffee, 5.0 USD -&gt; Salad, відновлено 490 рядків). Альтернативою було
+залишити всі ці значення як <code>NA</code>. Однак, оскільки прайс
+кав’ярні є суворо фіксованим, відновлення було на 100% математично
+обґрунтованим і повернуло в товарний аналіз 490 чеків без
+вигадок.</p></li>
+<li><p><strong>Які записи ви свідомо не стали автоматично
+“виправляти”?</strong><br />
+Ми свідомо не заповнювали пропуски у способах оплати (3 178 рядків) та
+локаціях (3 961 рядок) найчастішим значенням (модою). Також ми не
+відновлювали назви товарів при цінах 3.0 USD (Cake чи Juice) та 4.0 USD
+(Sandwich чи Smoothie), оскільки будь-яке таке рішення було б
+фальсифікацією первинних даних.</p></li>
+<li><p><strong>Які результати змінилися найбільше після
+очистки?</strong><br />
+Найбільше змінився показник загальної виручки: з 84 763.50 USD у сирих
+даних до 89 096.00 USD в очищених (+4 332.50 USD). Також зі списку
+товарів було усунено фіктивні категорії-фантоми <code>ERROR</code> (292
+рядки) та <code>UNKNOWN</code> (344 рядки).</p></li>
+<li><p><strong>Які невизначеності залишилися?</strong><br />
+Залишилася значна частка невідомих способів оплати (31.78%) та локацій
+(39.61%), 460 невідомих дат. Водночас у параметрах замовлення немає
+жодного рядка, де одночасно були б втрачені всі 4 атрибути (Item,
+Quantity, Price, Total).</p></li>
+<li><p><strong>Що могло б статися, якби на сирих даних одразу навчити
+ML-модель?</strong></p>
+<ul>
+<li>Алгоритми регресії впали б з критичною помилкою (Runtime Error)
+через неможливість конвертувати рядок <code>"ERROR"</code> у числове
+поле.</li>
+<li>Використання наївних ознак разом із <code>calculated_total</code>
+призвело б до фатального Data Leakage та повної непридатності моделі в
+продакшені.</li>
+<li>Алгоритми, що не підтримують пропуски, або вилучили б 69% датасету,
+або трактували б пропуски як нулі, критично занизивши прогнозований
+дохід.</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="використані-r-скрипти-та-ключові-команди">14. Використані
+R-скрипти та ключові команди</h2>
+<h3 id="безпечний-імпорт-текстових-даних">1. Безпечний імпорт текстових
+даних</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>sales_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;data/raw/dirty_cafe_sales.csv&quot;</span>, <span class="at">col_types =</span> <span class="fu">cols</span>(<span class="at">.default =</span> <span class="st">&quot;c&quot;</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sales_raw_snapshot <span class="ot">&lt;-</span> sales_raw</span></code></pre></div>
+<h3 id="пошук-текстових-маркерів-помилок">2. Пошук текстових маркерів
+помилок</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pseudo_counts <span class="ot">&lt;-</span> <span class="fu">sapply</span>(sales_raw, <span class="cf">function</span>(x) <span class="fu">sum</span>(<span class="fu">trimws</span>(x) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;&quot;</span>, <span class="st">&quot;ERROR&quot;</span>, <span class="st">&quot;UNKNOWN&quot;</span>, <span class="st">&quot;NA&quot;</span>, <span class="st">&quot;NULL&quot;</span>)))</span></code></pre></div>
+<h3 id="безпечний-парсинг-числових-полів">3. Безпечний парсинг числових
+полів</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Quantity_num <span class="ot">&lt;-</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(sales_raw<span class="sc">$</span>Quantity))</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Price_num <span class="ot">&lt;-</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(sales_raw<span class="sc">$</span><span class="st">`</span><span class="at">Price Per Unit</span><span class="st">`</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>Total_num <span class="ot">&lt;-</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(sales_raw<span class="sc">$</span><span class="st">`</span><span class="at">Total Spent</span><span class="st">`</span>))</span></code></pre></div>
+<h3 id="детермінований-розрахунок-та-перевірка-узгодженості-чека">4.
+Детермінований розрахунок та перевірка узгодженості чека</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>calculated_total <span class="ot">&lt;-</span> Quantity_clean <span class="sc">*</span> Price_clean</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>is_total_consistent <span class="ot">&lt;-</span> <span class="fu">abs</span>(Total_clean <span class="sc">-</span> calculated_total) <span class="sc">&lt;</span> <span class="fl">1e-4</span></span></code></pre></div>
+<h3 id="парсинг-дат-та-feature-engineering">5. Парсинг дат та Feature
+Engineering</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Date_clean <span class="ot">&lt;-</span> <span class="fu">suppressWarnings</span>(<span class="fu">ymd</span>(sales_raw<span class="sc">$</span><span class="st">`</span><span class="at">Transaction Date</span><span class="st">`</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>Day_of_Week <span class="ot">&lt;-</span> <span class="fu">wday</span>(Date_clean, <span class="at">label =</span> <span class="cn">TRUE</span>, <span class="at">abbr =</span> <span class="cn">FALSE</span>, <span class="at">week_start =</span> <span class="dv">1</span>, <span class="at">locale =</span> <span class="st">&quot;C&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>Month <span class="ot">&lt;-</span> <span class="fu">month</span>(Date_clean, <span class="at">label =</span> <span class="cn">TRUE</span>, <span class="at">abbr =</span> <span class="cn">FALSE</span>, <span class="at">locale =</span> <span class="st">&quot;C&quot;</span>)</span></code></pre></div>
+<h3 id="програмна-валідація-assertions">6. Програмна валідація
+(Assertions)</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">identical</span>(sales_raw, sales_raw_snapshot))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">nrow</span>(sales_clean) <span class="sc">==</span> <span class="dv">10000</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">all</span>(checked_rows<span class="sc">$</span>is_total_consistent <span class="sc">==</span> <span class="cn">TRUE</span>))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="sc">!</span><span class="fu">any</span>(sales_clean<span class="sc">$</span>Item <span class="sc">==</span> <span class="st">&quot;ERROR&quot;</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span></code></pre></div>
+<h3 id="експорт-результатів">7. Експорт результатів</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(sales_clean, <span class="st">&quot;data/processed/cleaned_cafe_sales.csv&quot;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(suspicious_records, <span class="st">&quot;data/processed/suspicious_cafe_sales.csv&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(results_summary_df, <span class="st">&quot;report/results_summary.csv&quot;</span>)</span></code></pre></div>
+</body>
+</html>

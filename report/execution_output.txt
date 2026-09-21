@@ -1,0 +1,417 @@
+==================================================
+CAFE SALES DATA CLEANING LAB
+==================================================
+
+=== ENVIRONMENT ===
+
+R version:         R version 4.6.1 (2026-06-24 ucrt) 
+Working directory: cafe-sales-data-cleaning 
+Input file:        data/raw/dirty_cafe_sales.csv 
+
+=== DATA IMPORT ===
+
+Rows:    10000 
+Columns: 8 
+Column names: Transaction ID, Item, Quantity, Price Per Unit, Total Spent, Payment Method, Location, Transaction Date 
+
+=== INITIAL DATA AUDIT ===
+
+Initial R data types (all character by design):
+# A tibble: 8 × 2
+  Column           Class    
+  <chr>            <chr>    
+1 Transaction ID   character
+2 Item             character
+3 Quantity         character
+4 Price Per Unit   character
+5 Total Spent      character
+6 Payment Method   character
+7 Location         character
+8 Transaction Date character
+
+Formal R NA counts immediately after read_csv() import:
+(Empty CSV cells are converted to system NA during import; textual markers like ERROR/UNKNOWN remain character text)
+# A tibble: 8 × 2
+  Column           Formal_NA
+  <chr>                <dbl>
+1 Transaction ID           0
+2 Item                   333
+3 Quantity               138
+4 Price Per Unit         179
+5 Total Spent            173
+6 Payment Method        2579
+7 Location              3265
+8 Transaction Date       159
+
+=== PSEUDO-MISSING VALUES AUDIT ===
+
+# A tibble: 8 × 9
+  Column           Total Formal_NA Empty_String ERROR_Marker UNKNOWN_Marker
+  <chr>            <int>     <int>        <int>        <int>          <int>
+1 Transaction ID   10000         0            0            0              0
+2 Item             10000       333            0          292            344
+3 Quantity         10000       138            0          170            171
+4 Price Per Unit   10000       179            0          190            164
+5 Total Spent      10000       173            0          164            165
+6 Payment Method   10000      2579            0          306            293
+7 Location         10000      3265            0          358            338
+8 Transaction Date 10000       159            0          142            159
+  Other_Markers Total_Defects Defect_Pct
+          <int>         <int>      <dbl>
+1             0             0       0   
+2             0           969       9.69
+3             0           479       4.79
+4             0           533       5.33
+5             0           502       5.02
+6             0          3178      31.8 
+7             0          3961      39.6 
+8             0           460       4.6 
+
+=== RAW MISSING METRICS (SOURCE OF TRUTH) ===
+
+Raw missing Item:                  969 
+Raw missing Quantity:              479 
+Raw missing Price Per Unit:        533 
+Raw missing Total Spent:           502 
+Raw missing Payment Method:        3178 
+Raw missing Location:              3961 
+Raw missing Transaction Date:      460 
+Total rows with >= 1 raw defect:   6911 ( 69.11 %)
+Defective numeric cells:           1514 across Q, P, T
+Unique rows with numeric defects:  1456 
+
+=== NUMERIC PARSING AUDIT ===
+
+# A tibble: 3 × 11
+  Field          Total_Rows Missing_or_Invalid Missing_Pct Valid_Numeric   Min
+  <chr>               <int>              <int>       <dbl>         <int> <dbl>
+1 Quantity            10000                479        4.79          9521     1
+2 Price Per Unit      10000                533        5.33          9467     1
+3 Total Spent         10000                502        5.02          9498     1
+     Q1 Median  Mean    Q3   Max
+  <dbl>  <dbl> <dbl> <dbl> <dbl>
+1     2      3  3.03     4     5
+2     2      3  2.95     4     5
+3     4      8  8.92    12    25
+
+=== RECOVERY RULE VALIDATION ===
+
+1. Item -> Price deterministic rule audit:
+# A tibble: 8 × 4
+  Item     number_of_unique_prices Prices Observations
+  <chr>                      <int> <chr>         <int>
+1 Cake                           1 3              1085
+2 Coffee                         1 2              1108
+3 Cookie                         1 1              1026
+4 Juice                          1 3              1110
+5 Salad                          1 5              1082
+6 Sandwich                       1 4              1082
+7 Smoothie                       1 4              1036
+8 Tea                            1 1.5            1023
+Is Item -> Price 100% deterministic (each item has exactly 1 price)? TRUE 
+
+2. Price -> Item deterministic rule audit:
+# A tibble: 6 × 4
+  Price number_of_unique_items Items              Observations
+  <dbl>                  <int> <chr>                     <int>
+1   1                        1 Cookie                     1026
+2   1.5                      1 Tea                        1023
+3   2                        1 Coffee                     1108
+4   3                        2 Cake, Juice                2195
+5   4                        2 Sandwich, Smoothie         2118
+6   5                        1 Salad                      1082
+Notice: For Price = 3.0 and Price = 4.0, number_of_unique_items == 2!
+Therefore, recovering Item from Price is STRICTLY RESTRICTED to prices with number_of_unique_items == 1:
+  - Price 1.0 -> Cookie (unique)
+  - Price 1.5 -> Tea (unique)
+  - Price 2.0 -> Coffee (unique)
+  - Price 5.0 -> Salad (unique)
+  - Price 3.0 -> AMBIGUOUS (Cake vs Juice) -> MUST REMAIN NA!
+  - Price 4.0 -> AMBIGUOUS (Sandwich vs Smoothie) -> MUST REMAIN NA!
+
+3. Mathematical uniqueness audit of Total = Price * Quantity:
+# A tibble: 17 × 3
+   Total n_combinations combinations                         
+   <dbl>          <int> <chr>                                
+ 1   1                1 P=1 * Q=1                            
+ 2   1.5              1 P=1.5 * Q=1                          
+ 3   2                2 P=2 * Q=1 OR P=1 * Q=2               
+ 4   3                3 P=3 * Q=1 OR P=1.5 * Q=2 OR P=1 * Q=3
+ 5   4                3 P=4 * Q=1 OR P=2 * Q=2 OR P=1 * Q=4  
+ 6   4.5              1 P=1.5 * Q=3                          
+ 7   5                2 P=5 * Q=1 OR P=1 * Q=5               
+ 8   6                3 P=3 * Q=2 OR P=2 * Q=3 OR P=1.5 * Q=4
+ 9   7.5              1 P=1.5 * Q=5                          
+10   8                2 P=4 * Q=2 OR P=2 * Q=4               
+11   9                1 P=3 * Q=3                            
+12  10                2 P=5 * Q=2 OR P=2 * Q=5               
+13  12                2 P=4 * Q=3 OR P=3 * Q=4               
+14  15                2 P=5 * Q=3 OR P=3 * Q=5               
+15  16                1 P=4 * Q=4                            
+16  20                2 P=5 * Q=4 OR P=4 * Q=5               
+17  25                1 P=5 * Q=5                            
+Totals that uniquely identify both Price and Quantity: 1, 1.5, 4.5, 7.5, 9, 16, 25 
+
+=== RAW TOTAL CONSISTENCY ===
+
+Total raw rows checkable (Q, P, T all present): 8544 
+Consistent raw rows (Total == Q * P):           8544 (100.00%)
+Inconsistent raw rows (Total != Q * P):         0 
+Uncheckable raw rows (at least 1 missing):      1456 
+
+=== DUPLICATES ===
+
+Full row duplicates:         0 
+Duplicate Transaction IDs:   0 
+Unique Transaction IDs:      10000 out of 10000 
+
+=== CATEGORICAL CLEANING ===
+
+Item frequencies before cleaning:
+
+    Cake   Coffee   Cookie    ERROR    Juice    Salad Sandwich Smoothie 
+    1139     1165     1092      292     1171     1148     1131     1096 
+     Tea  UNKNOWN     <NA> 
+    1089      344      333 
+
+Payment Method frequencies before cleaning:
+
+          Cash    Credit Card Digital Wallet          ERROR        UNKNOWN 
+          2258           2273           2291            306            293 
+          <NA> 
+          2579 
+
+Location frequencies before cleaning:
+
+   ERROR In-store Takeaway  UNKNOWN     <NA> 
+     358     3017     3022      338     3265 
+
+=== DATE CLEANING ===
+
+Valid calendar dates (YYYY-MM-DD): 9540 
+Invalid/Missing dates:             460 
+Date range:                        2023-01-01 to 2023-12-31 
+
+=== OUTLIERS AUDIT ===
+
+Total Spent raw quartiles: Q1 = 4 | Median = 8 | Q3 = 12 | IQR = 8 
+Tukey upper bound in raw data (Q3 + 1.5*IQR): 24 
+Formal statistical outliers in raw data (> 24): 259 checks of exactly $25.00
+
+=== CLEANING PIPELINE ===
+
+Cleaned table constructed successfully.
+Dimensions: 10000 rows, 28 columns.
+Rows with raw defects originally:                 6911 
+Price Per Unit recovered (Total):                 529 
+  - from Item:                                    479 
+  - from Total / Quantity:                        48 
+  - from Unique Total (T=25, T=9):                2 
+Item recovered (unambiguous price only):          490 
+  - from raw unique prices:                       468 
+  - from recovered Total/Quantity prices:         21 
+  - from recovered Total=25:                      1 
+Quantity recovered:                               458 
+  - from Total / Price:                           456 
+  - from Unique Total:                            2 
+Total Spent recovered:                            479 
+Rows with unresolved missing data (is_suspicious): 6229 
+
+=== POST-CLEANING VALIDATION ===
+
+Clean checkable rows (Total and calculated_total present): 9976 
+Clean consistent rows (Total == Q * P):                   9976 (100.00%)
+Clean inconsistent rows (Total != Q * P):                 0 
+Clean uncheckable rows (residual missing):                24 
+
+All programmatic assertions via stopifnot() passed with zero errors!
+
+=== RESIDUAL MISSINGNESS PATTERN ANALYSIS ===
+
+# A tibble: 4 × 5
+  Item_missing Quantity_missing Price_missing Total_missing Count
+  <lgl>        <lgl>            <lgl>         <lgl>         <int>
+1 TRUE         FALSE            FALSE         FALSE           475
+2 FALSE        TRUE             FALSE         TRUE             20
+3 TRUE         FALSE            TRUE          TRUE              3
+4 TRUE         TRUE             TRUE          FALSE             1
+
+Key Finding: ZERO rows have all 4 order attributes missing simultaneously.
+The 23 missing Total Spent values consist of 20 rows with known Item & Price, and 3 rows with known Quantity.
+
+=== RAW VS CLEANED COMPARISON ===
+
+# A tibble: 7 × 5
+  Feature          Raw_Missing Cleaned_Missing Recovered Cleaned_Missing_Pct
+  <chr>                  <int>           <int>     <int>               <dbl>
+1 Item                     969             479       490                4.79
+2 Quantity                 479              21       458                0.21
+3 Price Per Unit           533               4       529                0.04
+4 Total Spent              502              23       479                0.23
+5 Payment Method          3178            3178         0               31.8 
+6 Location                3961            3961         0               39.6 
+7 Transaction Date         460             460         0                4.6 
+
+=== BUSINESS CHECK 1: REVENUE IMPACT ===
+
+# A tibble: 4 × 4
+  Metric                          Raw  Cleaned Difference
+  <chr>                         <dbl>    <dbl>      <dbl>
+1 Valid Revenue Transactions  9498     9977      479     
+2 Total Revenue ($)          84764.   89096     4332.    
+3 Mean Check ($)                 8.92     8.93     0.0058
+4 Median Check ($)               8        8        0     
+Revenue growth due to reconstruction: +$ 4332.50  (+5.11%)
+Additional valid checks recovered:   + 479 
+
+=== BUSINESS CHECK 2: INDEPENDENT ITEM POPULARITY ===
+
+# A tibble: 8 × 7
+  Item     Transactions Units_Sold Revenue Rank_Transactions Rank_Units
+  <chr>           <int>      <dbl>   <dbl>             <int>      <int>
+1 Salad            1273       3824   19120                 2          2
+2 Sandwich         1131       3429   13716                 7          7
+3 Smoothie         1096       3336   13344                 8          8
+4 Juice            1171       3505   10515                 5          5
+5 Cake             1139       3468   10404                 6          6
+6 Coffee           1291       3904    7808                 1          1
+7 Tea              1207       3650    5475                 4          3
+8 Cookie           1213       3598    3598                 3          4
+  Rank_Revenue
+         <int>
+1            1
+2            2
+3            3
+4            4
+5            5
+6            6
+7            7
+8            8
+Top Item by Transactions:  Coffee ( 1291 transactions)
+Top Item by Units Sold:   Coffee ( 3904 units)
+Top Item by Revenue:      Salad ($ 19120.00 )
+
+=== BUSINESS CHECK 3: PAYMENT METHODS ===
+
+# A tibble: 3 × 8
+  `Payment Method` Transactions Revenue_Transactions Revenue Mean_Check
+  <chr>                   <int>                <int>   <dbl>      <dbl>
+1 Credit Card              2273                 2269  20466        9.02
+2 Digital Wallet           2291                 2285  20414        8.93
+3 Cash                     2258                 2254  20402.       9.05
+  Median_Check Tx_Share_Pct Revenue_Share_Pct
+         <dbl>        <dbl>             <dbl>
+1            8         33.3              33.4
+2            8         33.6              33.3
+3            8         33.1              33.3
+
+=== BUSINESS CHECK 4: TIME PATTERNS ===
+
+Sales by Day of Week:
+# A tibble: 7 × 5
+  Day_of_Week Transactions Revenue_Transactions Revenue Mean_Check
+  <ord>              <int>                <int>   <dbl>      <dbl>
+1 Monday              1382                 1379  12140        8.8 
+2 Tuesday             1311                 1308  12040.       9.2 
+3 Wednesday           1341                 1339  11680.       8.72
+4 Thursday            1380                 1376  12402.       9.01
+5 Friday              1388                 1383  12334        8.92
+6 Saturday            1358                 1354  12040.       8.89
+7 Sunday              1380                 1378  12288.       8.92
+Top Day of Week by Revenue: Thursday ($ 12401.50 )
+
+Sales by Month:
+# A tibble: 12 × 6
+   Month_Num Month     Transactions Revenue_Transactions Revenue Mean_Check
+       <dbl> <ord>            <int>                <int>   <dbl>      <dbl>
+ 1         1 January            818                  815   7254        8.9 
+ 2         2 February           727                  726   6644        9.15
+ 3         3 March              827                  826   7216        8.74
+ 4         4 April              774                  771   7179        9.31
+ 5         5 May                777                  773   6958.       9   
+ 6         6 June               818                  817   7353        9   
+ 7         7 July               791                  789   6878.       8.72
+ 8         8 August             803                  802   7112.       8.87
+ 9         9 September          788                  786   6871        8.74
+10        10 October            838                  837   7314        8.74
+11        11 November           784                  784   6967        8.89
+12        12 December           795                  791   7177        9.07
+Top Month by Revenue: June ($ 7353.00 )
+
+=== POST-CLEANING OUTLIERS VALIDATION ===
+
+Cleaned Total Spent Tukey stats: Q1 = 4 | Median = 8 | Q3 = 12 | IQR = 8 
+Tukey upper bound in cleaned data: 24 
+Total $25 transactions in cleaned dataset: 269 
+  - Confirmed 5 portions of Salad @ $5.00:   269 ( 100 %)
+  - Unresolved:                              0 
+Explanation of count difference (Raw 259 vs Cleaned 269):
+  In the raw dataset, 259 checks had valid Total Spent = $25.00.
+  During deterministic recovery, 10 missing totals were reconstructed as $25.00 (Salad Quantity 5 * Price $5.00).
+  Therefore, exactly 269 checks equal $25.00 in the cleaned dataset, and all 269 are confirmed valid orders.
+
+=== FILE GENERATION ===
+
+Cleaned dataset written to:    data/processed/cleaned_cafe_sales.csv 
+  Rows: 10000 | Cols: 28 | Size: 1587031 bytes
+Suspicious dataset written to: data/processed/suspicious_cafe_sales.csv 
+  Rows: 6229 | Cols: 28 | Size: 958886 bytes
+Read-back verification: SUCCESS (processed CSV files validated from disk).
+
+Results summary written to:    report/results_summary.csv 
+Results summary self-validation: SUCCESS (zero silent NULL/0 bugs, all 49 metrics verified).
+
+=== FIGURE GENERATION ===
+
+FIGURE SAVED:
+  Path:    figures/01_quantity_distribution.png 
+  Exists:  TRUE
+  Size:    59481 bytes
+
+FIGURE SAVED:
+  Path:    figures/02_price_distribution.png 
+  Exists:  TRUE
+  Size:    55816 bytes
+
+FIGURE SAVED:
+  Path:    figures/03_total_spent_distribution.png 
+  Exists:  TRUE
+  Size:    67793 bytes
+
+FIGURE SAVED:
+  Path:    figures/04_total_spent_boxplot.png 
+  Exists:  TRUE
+  Size:    65993 bytes
+
+FIGURE SAVED:
+  Path:    figures/05_revenue_by_weekday.png 
+  Exists:  TRUE
+  Size:    66151 bytes
+
+FIGURE SAVED:
+  Path:    figures/06_revenue_by_month.png 
+  Exists:  TRUE
+  Size:    96600 bytes
+
+=== FINAL REPOSITORY AUDIT ===
+
+Total Raw rows:                      10000 
+Total Cleaned rows:                  10000 
+Suspicious/Incomplete rows:          6229 
+Raw valid revenue transactions:      9498 
+Cleaned valid revenue transactions:  9977 (+ 479 )
+Raw revenue:                        $ 84763.50 
+Cleaned revenue:                    $ 89096.00 (+$ 4332.50  / + 5.11 %)
+Full row duplicates:                 0 
+Duplicate IDs:                       0 
+Unparseable dates:                   460 
+Residual Item missing:               479 
+Residual Quantity missing:           21 
+Residual Price missing:              4 
+Residual Total Spent missing:        23 
+Raw immutability check: PASS (sales_raw is strictly identical to snapshot).
+
+=== SUCCESS ===
+
+ALL CHECKS AND VALIDATIONS COMPLETED SUCCESSFULLY!
+Pipeline finished cleanly without errors.

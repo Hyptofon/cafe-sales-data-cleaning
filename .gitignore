@@ -1,0 +1,23 @@
+# R History and Environment
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# VS Code and IDEs
+.vscode/
+.idea/
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary and Log Files
+*.tmp
+*.temp
+*.log
+~$*
